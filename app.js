@@ -105,19 +105,57 @@
   // ---------- routing (in-page state) ----------
   const state = { subject: null, chapter: null, tab: "learn" };
   const app = () => $("#app");
-  function go(next) {
+  // The URL hash mirrors the state (#/subject/chapter/tab), so the browser's back button works too.
+  function toHash() {
+    if (!state.subject) return "#/";
+    if (!state.chapter) return "#/" + state.subject.id;
+    if (state.chapter === "exam") return "#/" + state.subject.id + "/exam";
+    return "#/" + state.subject.id + "/" + state.chapter.id + "/" + state.tab;
+  }
+  function fromHash() {
+    const [sid, cid, tab] = (location.hash || "").replace(/^#\/?/, "").split("/").map(decodeURIComponent);
+    const subject = SUBJECTS.find((x) => x.id === sid) || null;
+    let chapter = null;
+    if (subject && cid === "exam") chapter = "exam";
+    else if (subject && cid) chapter = subject.chapters.find((c) => c.id === cid) || null;
+    const okTab = TABS.some(([k]) => k === tab) ? tab : "learn";
+    Object.assign(state, { subject, chapter, tab: okTab });
+  }
+  function go(next, { replace = false } = {}) {
     Object.assign(state, next);
+    const hash = toHash();
+    try {
+      if (location.hash !== hash) {
+        if (replace) history.replaceState(null, "", hash);
+        else history.pushState(null, "", hash);
+      }
+    } catch (e) { /* history unavailable: in-page state still works */ }
     render();
-    window.scrollTo({ top: 0 });
+    if (!replace) window.scrollTo({ top: 0 });
+  }
+  function back() {
+    if (state.chapter) go({ chapter: null });
+    else go({ subject: null, chapter: null });
   }
 
+  function crumbLink(label, next) {
+    return h("button", { class: "crumb", onclick: () => go(next) }, label);
+  }
   function crumbs() {
     const c = $("#crumbs");
+    c.innerHTML = "";
     const parts = [];
-    if (state.subject) parts.push(state.subject.title);
-    if (state.chapter && state.chapter !== "exam") parts.push(state.chapter.short || state.chapter.title);
-    if (state.chapter === "exam") parts.push("Final exam");
-    c.textContent = parts.join("  /  ");
+    if (state.subject) parts.push(state.chapter ? crumbLink(state.subject.title, { chapter: null }) : h("span", {}, state.subject.title));
+    if (state.chapter === "exam") parts.push(h("span", {}, "Final exam"));
+    else if (state.chapter) parts.push(h("span", {}, state.chapter.short || state.chapter.title));
+    parts.forEach((p, i) => { if (i) c.append(h("span", { class: "crumb-sep", "aria-hidden": "true" }, "/")); c.append(p); });
+  }
+  function backBar() {
+    if (!state.subject) return null;
+    const label = state.chapter ? "← Back to chapters" : "← All subjects";
+    return h("div", { class: "row backbar" },
+      h("button", { class: "btn back", onclick: back }, label),
+      state.chapter ? h("button", { class: "btn ghost", onclick: () => go({ subject: null, chapter: null }) }, "Home") : null);
   }
 
   function render() {
@@ -125,6 +163,7 @@
     const root = app();
     root.innerHTML = "";
     if (!state.subject) return root.append(homeView());
+    root.append(backBar());
     if (!state.chapter) return root.append(subjectView(state.subject));
     if (state.chapter === "exam") return root.append(examView(state.subject));
     root.append(chapterView(state.subject, state.chapter));
@@ -200,7 +239,7 @@
   function chapterView(s, ch) {
     const tabs = h("div", { class: "tabs", role: "tablist" },
       TABS.filter(([k]) => k !== "written" || (ch.written || []).length).map(([k, label]) =>
-        h("button", { class: "tab", role: "tab", "aria-selected": String(state.tab === k), onclick: () => go({ tab: k }) }, label)));
+        h("button", { class: "tab", role: "tab", "aria-selected": String(state.tab === k), onclick: () => go({ tab: k }, { replace: true }) }, label)));
     const body = { learn: learnTab, cheat: cheatTab, cards: cardsTab, quiz: quizTab, written: writtenTab }[state.tab](s, ch);
     return h("div", { class: "stack", style: "gap:20px" },
       h("div", { class: "stack" },
@@ -429,7 +468,12 @@
     const setTheme = (t) => { if (t) document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); try { localStorage.setItem("studyhub:theme", t || ""); } catch (e) {} };
     try { const t = localStorage.getItem("studyhub:theme"); if (t) setTheme(t); } catch (e) {}
     tbtn.addEventListener("click", () => { setTheme(isDark() ? "light" : "dark"); mermaidReady = null; render(); });
-    if (SUBJECTS.length === 1) state.subject = null; // still show the picker so more subjects fit in later
+    window.addEventListener("popstate", () => { fromHash(); render(); });
+    window.addEventListener("hashchange", () => { fromHash(); render(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && state.subject && !e.target.closest("input, textarea")) back();
+    });
+    fromHash();
     render();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();

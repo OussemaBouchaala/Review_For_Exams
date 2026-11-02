@@ -166,3 +166,12 @@ textarea.answer { width: 100%; min-height: 90px; padding: 10px 12px; border-radi
   .section, .q-card { padding: 16px; }
   .flash-face { padding: 18px; }
 }
+
+/* navigation: clickable breadcrumbs and back bar */
+.crumbs { display: flex; align-items: center; gap: 6px; }
+.crumb { background: none; border: 0; padding: 2px 4px; margin: -2px -4px; border-radius: 6px; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.crumb:hover { background: var(--surface-2); }
+.crumbs > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.crumb-sep { color: var(--line); flex: none; }
+.backbar { margin-bottom: -8px; }
+.btn.back { font-weight: 600; }
