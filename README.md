@@ -80,3 +80,16 @@ StudyHub.addScenes("iot", "ch1", {
 
 Step keys: `say`, `send` (moving messages: `from`, `to`, `label`, `tone`: good / bad / alt, `delay`, `dur`), `hl`, `ok`, `fail`, `clear`, `dim`, `note`, `cut`.
 Nodes and edges accept `at` / `until` to appear or disappear at a given step. Mermaid diagrams animate automatically.
+
+## Everyday examples
+
+`StudyHub.addExamples("arch", "dp", { "Section title": "text" })` adds a "concrete example" box to a lesson
+(label in French when the subject has `lang: "fr"`). Optional: `scrollScenes: true` on a subject makes its
+scenes advance with page scrolling instead of the play button.
+
+## Complete code listings
+
+Full, runnable programs live in `subjects/<id>/java/*.java`. Each file starts with
+`// @section <chapterId> | <section title>`. Run `node scripts/build-java.mjs <id>` (needs a JDK):
+it runs every program and writes `subjects/<id>/code.js` with the source and its real console output.
+These listings replace the short code excerpts of that section.

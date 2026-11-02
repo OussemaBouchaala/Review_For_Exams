@@ -1,7 +1,7 @@
 StudyHub.registerSubject({
   id: "arch",
   hue: 268,
-  scrollScenes: true,
+  lang: "fr",
   emoji: "🏛️",
   code: "RT4 · INSAT",
   title: "Architectures Réactives et Microservices",

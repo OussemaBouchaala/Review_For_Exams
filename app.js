@@ -32,6 +32,20 @@
         sec.scenes = (sec.scenes || []).concat(sc);
       }
     },
+    // Attach complete, runnable programs by section title: { "Section title": [{ file, lang, content, output }] }.
+    // They replace the short code excerpts ("code" diagrams) of that section.
+    addCode(subjectId, chapterId, map) {
+      const s = SUBJECTS.find((x) => x.id === subjectId);
+      const ch = s && s.chapters.find((c) => c.id === chapterId);
+      if (!ch) return console.warn("addCode: no chapter", subjectId, chapterId);
+      for (const [title, list] of Object.entries(map)) {
+        const sec = ch.sections.find((x) => x.title === title);
+        if (!sec) { console.warn("addCode: no section", title); continue; }
+        if (sec.diagram && sec.diagram.type === "code") delete sec.diagram;
+        if (sec.diagrams) sec.diagrams = sec.diagrams.filter((d) => d.type !== "code");
+        sec.code = (sec.code || []).concat(list);
+      }
+    },
   };
   const DEFAULT_HUE = 258;
 
@@ -236,6 +250,51 @@
     }
     return mermaidReady;
   }
+  // ---------- complete code listings ----------
+  const JAVA_KW = "abstract|assert|boolean|break|byte|case|catch|char|class|continue|default|do|double|else|enum|extends|final|finally|float|for|if|implements|import|instanceof|int|interface|long|new|null|package|private|protected|public|record|return|short|static|super|switch|synchronized|this|throw|throws|true|false|try|var|void|volatile|while";
+  const TOKEN = new RegExp(String.raw`(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)')|(@[A-Za-z]+)|\b(${JAVA_KW})\b|\b(\d+(?:\.\d+)?)\b|\b([A-Z][A-Za-z0-9_]*)\b`, "g");
+  const esc = (t) => t.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+  function highlight(src) {
+    let out = "", last = 0;
+    src.replace(TOKEN, (m, com, str, ann, kw, num, type, at) => {
+      out += esc(src.slice(last, at));
+      const cls = com ? "c" : str ? "s" : ann ? "a" : kw ? "k" : num ? "n" : "t";
+      out += `<span class="tk-${cls}">${esc(m)}</span>`;
+      last = at + m.length;
+      return m;
+    });
+    return out + esc(src.slice(last));
+  }
+  function codeEl(c) {
+    const pre = h("pre", { class: "code-src" });
+    pre.innerHTML = highlight(c.content);
+    const copy = h("button", { class: "code-btn", type: "button", title: "Copier le code" }, "📋 Copier");
+    copy.addEventListener("click", () => {
+      const done = () => { copy.textContent = "✓ Copié"; setTimeout(() => (copy.textContent = "📋 Copier"), 1600); };
+      if (navigator.clipboard) navigator.clipboard.writeText(c.content).then(done, () => {});
+    });
+    const lines = c.content.split("\n").length;
+    const body = h("div", { class: "code-body" }, pre);
+    const wrap = h("div", { class: "code-card" + (lines > 90 ? " folded" : "") },
+      h("div", { class: "code-head" },
+        h("span", { class: "code-dots" }, h("i"), h("i"), h("i")),
+        h("span", { class: "code-file" }, c.file),
+        h("span", { class: "code-lang" }, (c.lang || "").toUpperCase()),
+        copy),
+      body);
+    if (lines > 90) {
+      const more = h("button", { class: "code-more", type: "button" }, `Afficher tout le code (${lines} lignes) ↓`);
+      more.addEventListener("click", () => { wrap.classList.remove("folded"); more.remove(); });
+      wrap.append(more);
+    }
+    if (c.output) {
+      wrap.append(h("details", { class: "code-out" },
+        h("summary", {}, "Sortie console (", h("code", {}, `java ${c.file}`), ")"),
+        h("pre", {}, c.output)));
+    }
+    return h("div", { class: "block" }, label("💻", "Code Java complet"), wrap);
+  }
+
   let mid = 0;
   let mermaidQueue = Promise.resolve();
   function diagramEl(d) {
@@ -806,10 +865,11 @@
           sec.simple ? h("div", { class: "block" }, label("🗣️", "In plain words"), R("p", sec.simple)) : null,
           (sec.scenes || []).map(sceneBlock),
           sec.analogy ? h("div", { class: "block analogy" }, label("💡", "Think of it like"), R("p", sec.analogy)) : null,
-          sec.example ? h("div", { class: "block example" }, label("🧪", state.subject && state.subject.scrollScenes ? "Exemple concret" : "Real-life example"), R("p", sec.example)) : null,
+          sec.example ? h("div", { class: "block example" }, label("🧪", state.subject && state.subject.lang === "fr" ? "Exemple concret" : "Real-life example"), R("p", sec.example)) : null,
           sec.points && sec.points.length ? h("div", { class: "block" }, label("📌", "Key points"), h("ul", { class: "points" }, sec.points.map((p) => R("li", p)))) : null,
           (sec.diagrams || (sec.diagram ? [sec.diagram] : [])).map(diagramEl),
           sec.table ? h("div", { class: "table-wrap" }, tableEl(sec.table)) : null,
+          (sec.code || []).map(codeEl),
           sec.examTip ? h("div", { class: "block tip" }, label("🎯", "Exam tip"), R("p", sec.examTip)) : null,
           h("div", { class: "row" }, btn));
         btn.addEventListener("click", () => {
