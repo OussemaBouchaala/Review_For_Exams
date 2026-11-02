@@ -462,3 +462,22 @@ ol.steps li::before { content: counter(s); position: absolute; left: 0; top: -1p
 .scene-dots button { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 99px; background: var(--line); cursor: pointer; transition: width .3s, background .3s; }
 .scene-dots button.done { background: color-mix(in srgb, var(--accent) 45%, var(--line)); }
 .scene-dots button.on { width: 24px; background: var(--grad); }
+
+/* ---------- scroll-driven scenes ---------- */
+.scrolly { display: grid; grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr); gap: 22px; align-items: start; }
+.scrolly-stage { grid-column: 2; grid-row: 1; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 132px); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); z-index: 2; }
+.scrolly-stage .scene-svg { min-width: 0; }
+.scrolly-dots { display: flex; justify-content: center; padding: 8px 12px 10px; border-top: 1px solid var(--line); }
+.scrolly-dots .scene-dots { margin: 0; }
+.scrolly-steps { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 34vh; padding: 14vh 0 22vh; }
+.scrolly-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; opacity: .42; transform: scale(.96); transition: opacity .35s, transform .35s, border-color .35s, box-shadow .35s; }
+.scrolly-card .scene-step { align-self: flex-start; }
+.scrolly-card.on { opacity: 1; transform: none; border-color: var(--accent); box-shadow: 0 14px 32px -16px var(--glow); }
+.scrolly-end { color: var(--muted); font-size: 0.85rem; text-align: center; }
+.example { background: color-mix(in srgb, var(--signal) 9%, var(--surface)); border-radius: 12px; padding: 14px 16px; border: 1px solid color-mix(in srgb, var(--signal) 30%, transparent); }
+.example .block-label { color: var(--signal); }
+@media (max-width: 860px) {
+  .scrolly { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .scrolly-stage { grid-column: 1; grid-row: 1; top: calc(env(safe-area-inset-top, 0px) + 118px); }
+  .scrolly-steps { grid-column: 1; grid-row: 2; gap: 32vh; padding: 6vh 0 12vh; position: relative; z-index: 1; }
+}

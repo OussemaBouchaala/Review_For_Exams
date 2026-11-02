@@ -10,6 +10,17 @@
       const s = SUBJECTS.find((x) => x.id === subjectId);
       if (s) s.chapters.push(ch);
     },
+    // Attach everyday examples to lessons by section title: { "Section title": "text" }.
+    addExamples(subjectId, chapterId, map) {
+      const s = SUBJECTS.find((x) => x.id === subjectId);
+      const ch = s && s.chapters.find((c) => c.id === chapterId);
+      if (!ch) return console.warn("addExamples: no chapter", subjectId, chapterId);
+      for (const [title, ex] of Object.entries(map)) {
+        const sec = ch.sections.find((x) => x.title === title);
+        if (!sec) { console.warn("addExamples: no section", title); continue; }
+        sec.example = ex;
+      }
+    },
     // Attach animated scenes to lessons by section title: { "Section title": scene | [scenes] }.
     addScenes(subjectId, chapterId, map) {
       const s = SUBJECTS.find((x) => x.id === subjectId);
@@ -325,7 +336,8 @@
     return t;
   }
   const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
-  function sceneEl(sc) {
+  function sceneEl(sc, opts = {}) {
+    const scrollMode = !!opts.scroll;
     const W = sc.w || 620, H = sc.h || 300;
     const uid = "sc" + ++mid;
     const svg = sv("svg", { viewBox: `0 0 ${W} ${H}`, class: "scene-svg", role: "img", "aria-label": sc.title || "Animated diagram" });
@@ -400,7 +412,11 @@
     const playBtn = h("button", { class: "sc-btn primary", type: "button" });
     const prevBtn = h("button", { class: "sc-btn", type: "button", title: "Previous step", "aria-label": "Previous step" }, "◀");
     const nextBtn = h("button", { class: "sc-btn", type: "button", title: "Next step", "aria-label": "Next step" }, "▶");
-    steps.forEach((_, i) => dots.append(h("button", { type: "button", "aria-label": `Step ${i + 1}`, onclick: () => { stop(); show(i); } })));
+    steps.forEach((_, i) => dots.append(h("button", { type: "button", "aria-label": `Step ${i + 1}`, onclick: () => {
+      if (scrollMode && cards[i]) return cards[i].scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
+      stop(); show(i);
+    } })));
+    const cards = scrollMode ? steps.map((st, i) => h("div", { class: "scrolly-card", "data-i": i }, h("span", { class: "scene-step" }, `${i + 1} / ${steps.length}`), R("div", st.say || ""))) : [];
     function packet(sd, myToken) {
       let e = edges.find((x) => x.from === sd.from && x.to === sd.to), rev = false;
       if (!e) { e = edges.find((x) => x.from === sd.to && x.to === sd.from); rev = !!e; }
@@ -491,6 +507,27 @@
     playBtn.addEventListener("click", () => { if (playing) stop(); else play(); });
     prevBtn.addEventListener("click", () => { stop(); show(cur - 1); });
     nextBtn.addEventListener("click", () => { stop(); show(cur + 1); });
+    if (scrollMode) {
+      // Scroll-driven: the diagram stays pinned while the step cards scroll past; the card in the middle drives it.
+      const sroot = h("div", { class: "scrolly" },
+        h("div", { class: "scrolly-stage" }, h("div", { class: "scene-stage" }, svg), h("div", { class: "scrolly-dots" }, dots)),
+        h("div", { class: "scrolly-steps" }, cards, h("div", { class: "scrolly-end" }, "✓ Fin de l'animation : continue la leçon ↓")));
+      show(0);
+      let active = -1;
+      const activate = (i) => {
+        if (i === active) return;
+        active = i;
+        cards.forEach((c, j) => c.classList.toggle("on", j === i));
+        show(i);
+      };
+      if ("IntersectionObserver" in window) {
+        const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) activate(Number(e.target.dataset.i)); }),
+          { rootMargin: "-42% 0px -48% 0px" });
+        cards.forEach((c) => io.observe(c));
+      } else cards.forEach((c, i) => c.addEventListener("click", () => activate(i)));
+      cards.forEach((c, i) => c.addEventListener("click", () => activate(i)));
+      return sroot;
+    }
     const root = h("div", { class: "scene" },
       h("div", { class: "scene-stage" }, svg),
       h("div", { class: "scene-timer" }, timerBar),
@@ -507,7 +544,9 @@
     return root;
   }
   function sceneBlock(sc) {
-    return h("div", { class: "block" }, label("🎬", "Watch it step by step" + (sc.title ? ": " + sc.title : "")), sceneEl(sc));
+    const scroll = !!(state.subject && state.subject.scrollScenes);
+    const text = scroll ? "Fais défiler pour animer" : "Watch it step by step";
+    return h("div", { class: "block" }, label(scroll ? "🎞️" : "🎬", text + (sc.title ? " : " + sc.title : "")), sceneEl(sc, { scroll }));
   }
 
   // ---------- routing (in-page state) ----------
@@ -767,6 +806,7 @@
           sec.simple ? h("div", { class: "block" }, label("🗣️", "In plain words"), R("p", sec.simple)) : null,
           (sec.scenes || []).map(sceneBlock),
           sec.analogy ? h("div", { class: "block analogy" }, label("💡", "Think of it like"), R("p", sec.analogy)) : null,
+          sec.example ? h("div", { class: "block example" }, label("🧪", state.subject && state.subject.scrollScenes ? "Exemple concret" : "Real-life example"), R("p", sec.example)) : null,
           sec.points && sec.points.length ? h("div", { class: "block" }, label("📌", "Key points"), h("ul", { class: "points" }, sec.points.map((p) => R("li", p)))) : null,
           (sec.diagrams || (sec.diagram ? [sec.diagram] : [])).map(diagramEl),
           sec.table ? h("div", { class: "table-wrap" }, tableEl(sec.table)) : null,
