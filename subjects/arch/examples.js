@@ -283,3 +283,50 @@ StudyHub.addScenes("arch", "archlog", {
     ],
   },
 });
+
+// ---------- Itérateur et Stratégie (chapitre 1) ----------
+StudyHub.addExamples("arch", "dp", {
+  "Itérateur (Iterator)": "Ta **playlist Spotify** : le bouton « suivant » passe au titre d'après, que la playlist soit stockée en tableau, en liste ou sur un serveur. Tu ne vois jamais la structure, seulement « y a-t-il un titre suivant ? » (`hasNext`) et « donne-le » (`next`). En Java, chaque `for (String s : liste)` utilise un `Iterator` en cachette.",
+  "Stratégie (Strategy)": "**Google Maps** : même trajet, mais tu choisis l'algorithme d'itinéraire : *voiture*, *à pied* ou *transports*. L'application (le Context) ne change pas, seule la stratégie de calcul change, et tu peux basculer en un clic. En caisse : prix normal, tarif étudiant ou soldes = 3 stratégies de calcul du prix.",
+});
+
+StudyHub.addScenes("arch", "dp", {
+  "Itérateur (Iterator)": {
+    title: "parcourir sans regarder dedans",
+    w: 620, h: 330,
+    nodes: [
+      { id: "cl", x: 90, y: 180, icon: "🧑", label: "Client" },
+      { id: "it", x: 300, y: 180, icon: "👉", label: "Iterator\nposition", w: 130, kind: "accent" },
+      { id: "e1", x: 520, y: 85, icon: "🎵", label: "Titre 1", w: 120 },
+      { id: "e2", x: 520, y: 180, icon: "🎵", label: "Titre 2", w: 120 },
+      { id: "e3", x: 520, y: 275, icon: "🎵", label: "Titre 3", w: 120 },
+    ],
+    zones: [{ x: 445, y: 12, w: 150, h: 314, label: "Playlist (Aggregate)" }],
+    edges: [{ from: "cl", to: "it" }, { from: "it", to: "e1" }, { from: "it", to: "e2" }, { from: "it", to: "e3" }],
+    steps: [
+      { say: "Le client demande à la collection son itérateur : `playlist.createIterator()`. Il ne voit **pas** le tableau interne.", send: [{ from: "cl", to: "it", label: "createIterator()", tone: "alt" }], note: { it: "position = 0" } },
+      { say: "`hasNext()` → **true**, puis `next()` rend le **titre 1** et avance la position.", send: [{ from: "it", to: "e1", label: "next()" }], ok: ["e1"], note: { it: "position = 1" } },
+      { say: "Même appel, élément suivant : `next()` → **titre 2**.", send: [{ from: "it", to: "e2", label: "next()" }], ok: ["e2"], note: { it: "position = 2" } },
+      { say: "`next()` → **titre 3**. Puis `hasNext()` → **false** : la boucle `while (it.hasNext())` s'arrête.", send: [{ from: "it", to: "e3", label: "next()" }], ok: ["e3"], note: { it: "hasNext() = false" } },
+      { say: "Si demain la playlist devient une liste chaînée ou un arbre, **le code du client ne change pas** : il ne connaît que `hasNext / next / remove`.", hl: ["it"] },
+    ],
+  },
+  "Stratégie (Strategy)": {
+    title: "changer d'algorithme en cours de route",
+    w: 620, h: 300,
+    nodes: [
+      { id: "cx", x: 130, y: 150, icon: "🧾", label: "Context\n(caisse)", w: 140, kind: "accent" },
+      { id: "a", x: 490, y: 55, icon: "💵", label: "PrixNormal", w: 150 },
+      { id: "b", x: 490, y: 150, icon: "🎓", label: "PrixEtudiant", w: 150 },
+      { id: "c", x: 490, y: 245, icon: "🏷️", label: "PrixSoldes 30 %", w: 150 },
+    ],
+    edges: [{ from: "cx", to: "a" }, { from: "cx", to: "b" }, { from: "cx", to: "c" }],
+    steps: [
+      { say: "Le **Context** garde une seule référence `strategy`. Au départ : `PrixNormal`.", hl: ["a"], dim: ["b", "c"], note: { cx: "strategy = Normal" } },
+      { say: "`execute(200)` : le Context **délègue** le calcul à sa stratégie → **200 DT**.", send: [{ from: "cx", to: "a", label: "execute(200)" }, { from: "a", to: "cx", label: "200", tone: "good", delay: 900 }], dim: ["b", "c"] },
+      { say: "Un étudiant arrive : `setStrategy(new PrixEtudiant())`. **Rien ne change dans le Context.**", hl: ["b"], dim: ["a", "c"], note: { cx: "strategy = Étudiant" } },
+      { say: "Même appel `execute(200)`, autre algorithme → **160 DT**.", send: [{ from: "cx", to: "b", label: "execute(200)" }, { from: "b", to: "cx", label: "160", tone: "good", delay: 900 }], dim: ["a", "c"] },
+      { say: "Période de soldes : `setStrategy(new PrixSoldes(30))` → **140 DT**. Ajouter un algorithme = **ajouter une classe** (OCP), sans aucun `switch`.", send: [{ from: "cx", to: "c", label: "execute(200)" }, { from: "c", to: "cx", label: "140", tone: "good", delay: 900 }], dim: ["a", "b"], note: { cx: "strategy = Soldes" }, ok: ["c"] },
+    ],
+  },
+});
