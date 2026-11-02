@@ -61,3 +61,22 @@ StudyHub.addChapter("iot", {
 ## Single-file version
 
 `node scripts/bundle.mjs` writes `dist/study-hub.html` with everything inlined.
+
+## Animated explainers
+
+Lessons can carry step-by-step animated scenes (boxes, arrows and moving messages with a caption per step).
+Put them in `subjects/<id>/scenes.js`, loaded after the chapter files, and attach them by section title:
+
+```js
+StudyHub.addScenes("iot", "ch1", {
+  "MQTT: publish / subscribe through a broker": {
+    title: "publish, subscribe, broker", w: 620, h: 300,
+    nodes: [{ id: "p", x: 95, y: 80, icon: "🌡️", label: "Sensor" }, { id: "b", x: 310, y: 150, label: "Broker", kind: "accent" }],
+    edges: [{ from: "p", to: "b", label: "home/temp" }],
+    steps: [{ say: "The sensor **publishes**…", send: [{ from: "p", to: "b", label: "22°C" }], ok: ["b"], note: { b: "got it" } }],
+  },
+});
+```
+
+Step keys: `say`, `send` (moving messages: `from`, `to`, `label`, `tone`: good / bad / alt, `delay`, `dur`), `hl`, `ok`, `fail`, `clear`, `dim`, `note`, `cut`.
+Nodes and edges accept `at` / `until` to appear or disappear at a given step. Mermaid diagrams animate automatically.

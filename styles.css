@@ -98,7 +98,7 @@ strong { color: inherit; }
   border-bottom: 1px solid var(--line);
 }
 .topbar-inner, .wrap {
-  max-width: 900px; margin: 0 auto;
+  max-width: 1080px; margin: 0 auto;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
@@ -379,3 +379,86 @@ ol.steps li::before { content: counter(s); position: absolute; left: 0; top: -1p
 .cta-emoji { font-size: 2.2rem; animation: bob 3s ease-in-out infinite; }
 .same-view .tab-body { animation-delay: 0ms; }
 .hero .grad-text { padding-bottom: 2px; }
+
+/* ---------- mermaid motion ---------- */
+.diagram .block-label, .block-label .replay { }
+.replay { margin-left: auto; border: 1px solid var(--line); background: var(--surface); color: var(--accent); border-radius: 99px; padding: 1px 10px; font: 600 0.72rem var(--font-mono); cursor: pointer; text-transform: none; letter-spacing: 0; transition: transform .2s; }
+.replay:hover { transform: rotate(-8deg) scale(1.05); }
+.mmd-anim :is(g.cluster, g.node, g.classGroup, g.actor, rect.actor, g.note, rect.note) { animation: mmdNode .6s cubic-bezier(.2,.8,.2,1) backwards; animation-delay: calc(var(--d, 0) * 1ms); }
+@keyframes mmdNode { from { opacity: 0; filter: blur(6px); } }
+.mmd-anim :is(path.flowchart-link, path.relation, .edgePaths path, line[class^="messageLine"], path[class^="messageLine"]) { animation: mmdDraw .7s ease-out backwards; animation-delay: calc(var(--d, 0) * 1ms); }
+@keyframes mmdDraw { from { stroke-dasharray: calc(var(--len) * 1px); stroke-dashoffset: calc(var(--len) * 1px); } to { stroke-dasharray: calc(var(--len) * 1px); stroke-dashoffset: 0; } }
+.mmd-anim :is(g.edgeLabel, .messageText, text.relationshipLabel) { animation: fadein .4s backwards; animation-delay: calc(var(--d, 0) * 1ms); }
+.mmd-flow { fill: none; stroke: hsl(var(--h) 90% 62%); stroke-width: 3.2; stroke-linecap: round; stroke-dasharray: 2 16; pointer-events: none; opacity: 0; }
+.mmd-anim .mmd-flow { animation: flowIn .5s forwards, dashflow 1.1s linear infinite; animation-delay: calc(var(--d, 0) * 1ms), 0ms; }
+@keyframes flowIn { to { opacity: .85; } }
+@keyframes dashflow { to { stroke-dashoffset: -18; } }
+.mmd-focus :is(g.node, path.flowchart-link, .mmd-flow, g.edgeLabel) { transition: opacity .25s; }
+.mmd-focus g.node:not(.on) { opacity: .28; }
+.mmd-focus path.flowchart-link:not(.on), .mmd-focus .mmd-flow:not(.on) { opacity: .12 !important; }
+.mmd-focus g.node.on :is(rect, circle, polygon, path) { stroke: var(--accent) !important; stroke-width: 2.5px !important; }
+.mmd-focus path.flowchart-link.on { stroke: var(--accent) !important; stroke-width: 2.5px !important; }
+.diagram svg g.node { cursor: default; }
+
+/* ---------- animated scenes ---------- */
+.scene { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+.scene-stage { overflow-x: auto; padding: 10px 6px 4px; background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--grad-1) 9%, var(--bg)), var(--bg)); }
+.scene-svg { display: block; width: 100%; min-width: 520px; height: auto; font-family: var(--font-body); }
+.sc-zone { opacity: 0; transition: opacity .5s; }
+.sc-zone.is-on { opacity: 1; }
+.sc-zone rect { fill: color-mix(in srgb, var(--accent) 5%, transparent); stroke: color-mix(in srgb, var(--accent) 38%, var(--line)); stroke-dasharray: 6 5; stroke-width: 1.3; }
+.sc-zone text { fill: var(--accent); font: 700 10.5px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.sc-node { opacity: 0; transition: opacity .45s; }
+.sc-node.is-on { opacity: 1; }
+.sc-node.dim { opacity: .3; }
+.sc-inner { transform-box: fill-box; transform-origin: center; transform: scale(.6); transition: transform .5s cubic-bezier(.3,1.5,.5,1); }
+.sc-node.is-on .sc-inner { transform: none; }
+.sc-node .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.6; transition: fill .3s, stroke .3s; }
+.sc-node .halo { fill: none; stroke: var(--accent); stroke-width: 3; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.sc-node .lbl { fill: var(--ink); font-size: 13px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
+.sc-node .ico { font-size: 19px; text-anchor: middle; dominant-baseline: middle; }
+.sc-node.accent .box { fill: url(#ringGrad); stroke: none; }
+.sc-node.accent .lbl { fill: #fff; }
+.sc-node.ghost .box { stroke-dasharray: 5 4; fill: transparent; }
+.sc-node.hl .box { stroke: var(--accent); stroke-width: 2.6; }
+.sc-node.hl .halo { animation: halo 1.5s ease-out infinite; }
+@keyframes halo { 0% { opacity: .55; transform: scale(1); } 100% { opacity: 0; transform: scale(1.3); } }
+.sc-node.ok .box { fill: var(--good-bg); stroke: var(--good); stroke-width: 2.2; }
+.sc-node.ok.accent .box { stroke: var(--good); stroke-width: 3; }
+.sc-node.fail .box { fill: var(--bad-bg); stroke: var(--bad); stroke-width: 2.2; }
+.sc-node.fail .sc-inner { animation: scShake .5s; }
+.sc-node.fail .lbl, .sc-node.ok .lbl { fill: var(--ink); }
+.sc-node.hit .sc-inner { animation: scHit .45s; }
+@keyframes scHit { 40% { transform: scale(1.1); } }
+@keyframes scShake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+.sc-note { fill: var(--accent); font: 700 11.5px var(--font-mono); text-anchor: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+.sc-edge { opacity: 0; transition: opacity .5s; }
+.sc-edge.is-on { opacity: 1; }
+.sc-edge .line { fill: none; stroke: var(--muted); stroke-opacity: .5; stroke-width: 2; transition: stroke .3s, stroke-opacity .3s; }
+.sc-edge.dashed .line { stroke-dasharray: 6 5; }
+.sc-edge.active .line { stroke: var(--accent); stroke-opacity: 1; stroke-width: 2.4; stroke-dasharray: 7 6; animation: scDash .6s linear infinite; }
+@keyframes scDash { to { stroke-dashoffset: -13; } }
+.sc-edge.cut .line { stroke: var(--bad); stroke-opacity: .8; stroke-dasharray: 3 6; animation: none; }
+.sc-arrow { fill: var(--muted); fill: context-stroke; }
+.sc-elabel { fill: var(--muted); font: 600 10.5px var(--font-mono); text-anchor: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+.sc-ghost { fill: none; stroke: none; }
+.sc-pack rect { fill: hsl(var(--h) 75% 48%); filter: drop-shadow(0 3px 6px rgb(0 0 0 / .25)); }
+.sc-pack text { fill: #fff; font: 700 10.5px var(--font-mono); text-anchor: middle; dominant-baseline: middle; }
+.sc-pack.good rect { fill: #16a34a; }
+.sc-pack.bad rect { fill: #dc2626; }
+.sc-pack.alt rect { fill: hsl(calc(var(--h) + 60) 80% 45%); }
+.scene-timer { height: 3px; background: var(--surface-2); }
+.scene-timer span { display: block; height: 100%; width: 0; background: var(--grad); }
+@keyframes scTimer { from { width: 0; } to { width: 100%; } }
+.scene-caption { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; min-height: 70px; }
+.scene-step { flex: none; font: 600 0.74rem var(--font-mono); background: var(--grad); color: #fff; border-radius: 99px; padding: 2px 9px; margin-top: 3px; }
+.scene-say.in { animation: rise .4s cubic-bezier(.2,.8,.2,1) backwards; }
+.scene-controls { display: flex; align-items: center; gap: 8px; padding: 0 16px 14px; flex-wrap: wrap; }
+.sc-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: transform .15s, border-color .2s; }
+.sc-btn:hover:not([disabled]) { border-color: var(--accent); transform: translateY(-1px); }
+.sc-btn[disabled] { opacity: .4; cursor: default; }
+.sc-btn.primary { background: var(--grad); color: #fff; border-color: transparent; min-width: 104px; }
+.scene-dots { display: flex; gap: 6px; margin-left: auto; align-items: center; }
+.scene-dots button { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 99px; background: var(--line); cursor: pointer; transition: width .3s, background .3s; }
+.scene-dots button.done { background: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.scene-dots button.on { width: 24px; background: var(--grad); }
