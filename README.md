@@ -25,6 +25,7 @@ Or from a terminal: `npm i -g vercel && vercel --prod` inside this folder.
 1. Create `subjects/<id>/subject.js`:
    ```js
    StudyHub.registerSubject({ id: "networks", code: "NET", title: "Computer Networks",
+     hue: 20, emoji: "🌐",   // hue (0–360) sets the subject's colour theme; emoji shows on its card
      description: "…", studyPlan: ["…"], chapters: [] });
    ```
 2. Add one file per chapter with `StudyHub.addChapter("<id>", { … })` (format below).

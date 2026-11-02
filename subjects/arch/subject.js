@@ -1,5 +1,7 @@
 StudyHub.registerSubject({
   id: "arch",
+  hue: 268,
+  emoji: "🏛️",
   code: "RT4 · INSAT",
   title: "Architectures Réactives et Microservices",
   description: "Chapitre 1 (Patrons de conception GoF), Chapitre 2 (SOLID, cohésion et couplage de packages) et Chapitre 3 (Architecture logicielle : BF/BNF, attributs de qualité, compromis). Contenu en français, comme l'examen.",

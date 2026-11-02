@@ -1,5 +1,7 @@
 StudyHub.registerSubject({
   id: "iot",
+  hue: 190,
+  emoji: "📡",
   code: "IoT",
   title: "Technology and Protocols for IoT",
   description: "Chapter 1 (Intro to IoT) and Chapter 2 (Edge / Fog computing, MEC, Kubernetes), taught in plain language with analogies, diagrams, flashcards and scored quizzes.",
