@@ -519,3 +519,32 @@ details.more > summary::after { content: " ▾"; }
 details.more[open] > summary::after { content: " ▴"; }
 details.more[open] { padding-bottom: 12px; }
 details.more > .block + .block { margin-top: 12px; }
+
+/* ---------- modern diagram look ---------- */
+:root { --node-top: #ffffff; --node-bottom: color-mix(in srgb, var(--accent-soft) 85%, var(--accent) 15%); --node-line: color-mix(in srgb, var(--accent) 38%, transparent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --node-top: color-mix(in srgb, var(--accent) 22%, #1d1934); --node-bottom: #17142a; --node-line: color-mix(in srgb, var(--accent) 50%, transparent); } }
+:root[data-theme="dark"] { --node-top: color-mix(in srgb, var(--accent) 22%, #1d1934); --node-bottom: #17142a; --node-line: color-mix(in srgb, var(--accent) 50%, transparent); }
+.diagram {
+  border-radius: 18px; padding: 20px;
+  background:
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 0) 0 0 / 18px 18px,
+    linear-gradient(160deg, color-mix(in srgb, var(--accent-soft) 70%, var(--surface)), var(--surface) 65%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .5), var(--shadow);
+}
+.mmd-modern g.node :is(rect, polygon, circle, ellipse, path.basic),
+.mmd-modern :is(rect.actor, g.classGroup rect) {
+  fill: url(#nodeGrad) !important; stroke: var(--node-line) !important; stroke-width: 1.4px !important;
+  filter: drop-shadow(0 6px 10px rgb(30 20 80 / .12)) drop-shadow(0 1px 2px rgb(30 20 80 / .1));
+}
+.mmd-modern g.node :is(.nodeLabel, span, p) { color: var(--ink) !important; }
+.mmd-modern g.cluster rect { fill: color-mix(in srgb, var(--accent) 5%, transparent) !important; stroke: color-mix(in srgb, var(--accent) 40%, transparent) !important; stroke-dasharray: 6 5; stroke-width: 1.3px !important; }
+.mmd-modern g.cluster :is(.nodeLabel, span, p) { color: var(--accent) !important; }
+.mmd-modern :is(path.flowchart-link, .edgePaths path) { stroke: color-mix(in srgb, var(--accent) 55%, var(--muted)) !important; stroke-width: 2px !important; stroke-linecap: round; }
+.mmd-modern marker path { fill: color-mix(in srgb, var(--accent) 60%, var(--muted)) !important; stroke: none !important; }
+.mmd-modern .edgeLabel { background: transparent !important; }
+.mmd-modern .edgeLabel :is(span, p) { background: var(--surface) !important; color: var(--accent) !important; border-radius: 6px; }
+.mmd-modern .edgeLabel rect { fill: transparent !important; }
+.mmd-modern :is(line[class^="messageLine"], path[class^="messageLine"]) { stroke: color-mix(in srgb, var(--accent) 60%, var(--muted)) !important; stroke-width: 1.8px !important; }
+.mmd-modern .messageText { fill: var(--ink) !important; }
+.mmd-modern :is(rect.note) { fill: var(--warn-bg) !important; stroke: color-mix(in srgb, var(--warn) 45%, transparent) !important; }
+.mmd-modern line.actor-line { stroke: var(--line) !important; stroke-dasharray: 4 5; }

@@ -248,7 +248,12 @@
       secondaryColor: hex(hh + 42, 85, 94), tertiaryColor: hex(hh - 48, 80, 95), lineColor: hex(hh, 30, 45), textColor: "#1b1733",
       clusterBkg: hex(hh, 70, 98), clusterBorder: hex(hh, 45, 80), edgeLabelBackground: "#ffffff", nodeTextColor: "#1b1733",
     };
-    return { startOnLoad: false, securityLevel: "strict", theme: "base", themeVariables: { ...v, fontFamily: "Atkinson Hyperlegible, sans-serif" } };
+    return {
+      startOnLoad: false, securityLevel: "strict", theme: "base",
+      themeVariables: { ...v, fontFamily: "Atkinson Hyperlegible, sans-serif", fontSize: "15px" },
+      flowchart: { curve: "basis", padding: 18, nodeSpacing: 46, rankSpacing: 56 },
+      sequence: { actorMargin: 60, boxMargin: 12, noteMargin: 12, messageMargin: 40 },
+    };
   }
   function getMermaid() {
     if (!mermaidReady) {
@@ -331,7 +336,7 @@
       const id = "mmd" + ++mid;
       // Render one at a time so each uses the current subject's colours.
       mermaidQueue = mermaidQueue.then(() => getMermaid()).then((m) => { m.initialize(mermaidConfig()); return m.render(id, d.content); })
-        .then(({ svg }) => { box.innerHTML = svg; keepReadable(box); animateMermaid(box); })
+        .then(({ svg }) => { box.innerHTML = svg; modernise(box); keepReadable(box); animateMermaid(box); })
         .catch(() => { /* keep the source text visible as a fallback */ });
     } else if (d.type === "svg") {
       box.innerHTML = d.content;
@@ -349,6 +354,17 @@
     }
     wrap.append(box);
     return wrap;
+  }
+  // Modern look: rounded cards with a soft gradient (nodeGrad, defined in index.html), pill-shaped
+  // subgraphs and actors. The colours come from CSS, so they follow the subject hue and dark mode.
+  function modernise(box) {
+    const svg = box.querySelector("svg");
+    if (!svg) return;
+    svg.classList.add("mmd-modern");
+    const round = (sel, r) => svg.querySelectorAll(sel).forEach((el) => { el.setAttribute("rx", r); el.setAttribute("ry", r); });
+    round("g.node rect.basic, g.node rect.label-container, g.node > rect", 14);
+    round("g.cluster rect", 18);
+    round("rect.actor, rect.note, g.classGroup rect", 12);
   }
   // On a phone a wide diagram would shrink until its text is unreadable: keep it at 70% of its
   // natural size at least, and let the box scroll sideways instead.
