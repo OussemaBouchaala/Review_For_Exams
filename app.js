@@ -32,6 +32,19 @@
         sec.scenes = (sec.scenes || []).concat(sc);
       }
     },
+    // Attach extra diagrams by section title, shown first: { "Section title": diagram | [diagrams] }.
+    addDiagrams(subjectId, chapterId, map) {
+      const s = SUBJECTS.find((x) => x.id === subjectId);
+      const ch = s && s.chapters.find((c) => c.id === chapterId);
+      if (!ch) return console.warn("addDiagrams: no chapter", subjectId, chapterId);
+      for (const [title, d] of Object.entries(map)) {
+        const sec = ch.sections.find((x) => x.title === title);
+        if (!sec) { console.warn("addDiagrams: no section", title); continue; }
+        const old = sec.diagrams || (sec.diagram ? [sec.diagram] : []);
+        delete sec.diagram;
+        sec.diagrams = [].concat(d, old);
+      }
+    },
     // Attach complete, runnable programs by section title: { "Section title": [{ file, lang, content, output }] }.
     // They replace the short code excerpts ("code" diagrams) of that section.
     addCode(subjectId, chapterId, map) {
@@ -318,7 +331,7 @@
       const id = "mmd" + ++mid;
       // Render one at a time so each uses the current subject's colours.
       mermaidQueue = mermaidQueue.then(() => getMermaid()).then((m) => { m.initialize(mermaidConfig()); return m.render(id, d.content); })
-        .then(({ svg }) => { box.innerHTML = svg; animateMermaid(box); })
+        .then(({ svg }) => { box.innerHTML = svg; keepReadable(box); animateMermaid(box); })
         .catch(() => { /* keep the source text visible as a fallback */ });
     } else if (d.type === "svg") {
       box.innerHTML = d.content;
@@ -336,6 +349,13 @@
     }
     wrap.append(box);
     return wrap;
+  }
+  // On a phone a wide diagram would shrink until its text is unreadable: keep it at 70% of its
+  // natural size at least, and let the box scroll sideways instead.
+  function keepReadable(box) {
+    const svg = box.querySelector("svg");
+    const vb = svg && svg.viewBox && svg.viewBox.baseVal;
+    if (vb && vb.width) svg.style.minWidth = Math.round(vb.width * 0.7) + "px";
   }
   function tableEl(d) {
     return h("table", { class: "data" },
@@ -869,21 +889,25 @@
         R("p", ch.bigPicture),
         diagramEl(ch.bigPictureDiagram)) : null,
       ch.sections.map((sec, i) => {
+        const fr = !!(state.subject && state.subject.lang === "fr");
         let done = st.read.includes(i);
         const btn = h("button", { class: "btn" + (done ? " done" : "") }, done ? "✓ Understood" : "Mark as understood");
         const badge = h("span", { class: "done-badge", hidden: !done }, "✓ Done");
         const art = h("article", { class: "section lesson reveal" + (done ? " is-done" : "") },
           h("div", { class: "section-head" }, h("span", { class: "section-num" }, `${ch.number ?? ""}.${i + 1}`), badge),
           h("h2", {}, sec.title),
-          sec.simple ? h("div", { class: "block" }, label("🗣️", "In plain words"), R("p", sec.simple)) : null,
-          (sec.scenes || []).map(sceneBlock),
-          sec.analogy ? h("div", { class: "block analogy" }, label("💡", "Think of it like"), R("p", sec.analogy)) : null,
-          sec.example ? h("div", { class: "block example" }, label("🧪", state.subject && state.subject.lang === "fr" ? "Exemple concret" : "Real-life example"), R("p", sec.example)) : null,
-          sec.points && sec.points.length ? h("div", { class: "block" }, label("📌", "Key points"), h("ul", { class: "points" }, sec.points.map((p) => R("li", p)))) : null,
+          // Diagram-first: one line of text, then the visuals, then the essentials; the long text is folded.
+          sec.simple ? h("div", { class: "block lead" }, R("p", sec.simple)) : null,
           (sec.diagrams || (sec.diagram ? [sec.diagram] : [])).map(diagramEl),
+          (sec.scenes || []).map(sceneBlock),
           sec.table ? h("div", { class: "table-wrap" }, tableEl(sec.table)) : null,
+          sec.analogy ? h("div", { class: "block analogy" }, label("💡", fr ? "Comme…" : "Think of it like"), R("p", sec.analogy)) : null,
           (sec.code || []).map(codeEl),
-          sec.examTip ? h("div", { class: "block tip" }, label("🎯", "Exam tip"), R("p", sec.examTip)) : null,
+          sec.examTip ? h("div", { class: "block tip" }, label("🎯", fr ? "À l'examen" : "Exam tip"), R("p", sec.examTip)) : null,
+          (sec.points && sec.points.length) || sec.example ? h("details", { class: "more" },
+            h("summary", {}, fr ? "📖 Lire le détail (points clés, exemple concret)" : "📖 Read the details (key points, real-life example)"),
+            sec.points && sec.points.length ? h("div", { class: "block" }, label("📌", fr ? "Points clés" : "Key points"), h("ul", { class: "points" }, sec.points.map((p) => R("li", p)))) : null,
+            sec.example ? h("div", { class: "block example" }, label("🧪", fr ? "Exemple concret" : "Real-life example"), R("p", sec.example)) : null) : null,
           h("div", { class: "row" }, btn));
         btn.addEventListener("click", () => {
           const at = st.read.indexOf(i);

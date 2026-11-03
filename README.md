@@ -88,6 +88,21 @@ Nodes and edges accept `at` / `until` to appear or disappear at a given step. Me
 (label in French when the subject has `lang: "fr"`). Optional: `scrollScenes: true` on a subject makes its
 scenes advance with page scrolling instead of the play button.
 
+## Diagram-first lessons
+
+Each lesson shows one short lead sentence, then its diagrams and animations, then the table, analogy, code
+and exam tip. The key points and the real-life example are folded under "Read the details".
+`subjects/<id>/visuals.js` adds extra diagrams in front of a section's own ones:
+
+```js
+StudyHub.addDiagrams("devops", "iac", {
+  "Section title": { type: "mermaid", caption: "…", content: "flowchart LR\n  A --> B" },
+  "Other section": [diagram1, diagram2],
+});
+```
+
+Wide diagrams keep at least 70% of their natural size and scroll sideways on a phone.
+
 ## Complete code listings
 
 Full, runnable programs live in `subjects/<id>/java/*.java`. Each file starts with
