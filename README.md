@@ -44,6 +44,7 @@ StudyHub.addChapter("iot", {
     points: ["key point", "…"],
     diagram: { type: "mermaid" | "svg" | "ascii", content: "…", caption: "…" }, // or diagrams: [...]
     table: { headers: [...], rows: [[...]] },
+    code: [{ file: "deploy.yaml", lang: "yaml", caption: "…", content: "…" }], // highlighted listing (java, yaml, hcl, bash…)
     examTip: "What examiners like to ask",
   }],
   cheatsheet: [{ term: "…", def: "…" }],

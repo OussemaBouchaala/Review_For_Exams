@@ -254,7 +254,20 @@
   const JAVA_KW = "abstract|assert|boolean|break|byte|case|catch|char|class|continue|default|do|double|else|enum|extends|final|finally|float|for|if|implements|import|instanceof|int|interface|long|new|null|package|private|protected|public|record|return|short|static|super|switch|synchronized|this|throw|throws|true|false|try|var|void|volatile|while";
   const TOKEN = new RegExp(String.raw`(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)')|(@[A-Za-z]+)|\b(${JAVA_KW})\b|\b(\d+(?:\.\d+)?)\b|\b([A-Z][A-Za-z0-9_]*)\b`, "g");
   const esc = (t) => t.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
-  function highlight(src) {
+  // YAML / HCL / shell: # comments, strings, "key:" or "key =" names, $ commands, numbers, booleans.
+  const TOKEN_CONF = /(#[^\n]*|\/\/[^\n]*)|("(?:[^"\\\n]|\\.)*"|'[^'\n]*')|(^\s*(?:- )?\$ [^\n]*)|\b(true|false|null|resource|variable|provider|module|output|data)\b|\b(\d+(?:\.\d+)?)\b|((?:^|(?<=\n))\s*(?:- )?[A-Za-z_][\w.-]*(?=\s*[:=]))/gm;
+  function highlight(src, lang) {
+    if (lang && lang !== "java") {
+      let out = "", last = 0;
+      src.replace(TOKEN_CONF, (m, com, str, cmd, kw, num, key, at) => {
+        out += esc(src.slice(last, at));
+        const cls = com ? "c" : str ? "s" : cmd ? "a" : kw ? "k" : num ? "n" : "t";
+        out += `<span class="tk-${cls}">${esc(m)}</span>`;
+        last = at + m.length;
+        return m;
+      });
+      return out + esc(src.slice(last));
+    }
     let out = "", last = 0;
     src.replace(TOKEN, (m, com, str, ann, kw, num, type, at) => {
       out += esc(src.slice(last, at));
@@ -267,7 +280,7 @@
   }
   function codeEl(c) {
     const pre = h("pre", { class: "code-src" });
-    pre.innerHTML = highlight(c.content);
+    pre.innerHTML = highlight(c.content, c.lang);
     const copy = h("button", { class: "code-btn", type: "button", title: "Copier le code" }, "📋 Copier");
     copy.addEventListener("click", () => {
       const done = () => { copy.textContent = "✓ Copié"; setTimeout(() => (copy.textContent = "📋 Copier"), 1600); };
@@ -292,7 +305,7 @@
         h("summary", {}, "Sortie console (", h("code", {}, `java ${c.file}`), ")"),
         h("pre", {}, c.output)));
     }
-    return h("div", { class: "block" }, label("💻", "Code Java complet"), wrap);
+    return h("div", { class: "block" }, label("💻", c.caption || (c.lang === "java" ? "Code Java complet" : "Code")), wrap);
   }
 
   let mid = 0;

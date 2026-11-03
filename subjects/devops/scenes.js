@@ -1,0 +1,290 @@
+/* Animated step-by-step explainers for the DevOps subject, attached to lessons by section title. */
+StudyHub.addScenes("devops", "intro", {
+  "Roadblock 1: miscommunication and lack of collaboration": {
+    title: "the wall of confusion",
+    w: 620, h: 280,
+    nodes: [
+      { id: "dev", x: 100, y: 140, icon: "👩‍💻", label: "Developers", w: 140 },
+      { id: "wall", x: 310, y: 140, icon: "🧱", label: "Wall of\nconfusion", w: 120, kind: "accent" },
+      { id: "ops", x: 520, y: 140, icon: "🧑‍🔧", label: "Operations", w: 140 },
+      { id: "u", x: 310, y: 245, icon: "👥", label: "Users", w: 110, at: 4 },
+    ],
+    edges: [{ from: "dev", to: "wall" }, { from: "wall", to: "ops" }, { from: "ops", to: "u" }],
+    steps: [
+      { say: "Developers finish version 2.0 and consider their job done: *\"I wrote the code\"*. They throw it over the wall with a thin deployment guide.", send: [{ from: "dev", to: "wall", label: "v2.0 + guide" }], note: { dev: "job done ✓" } },
+      { say: "Operations receive code they don't understand. The guide is poorly documented: **the app can't be deployed**.", send: [{ from: "wall", to: "ops", label: "v2.0" }], fail: ["ops"], note: { ops: "how to deploy?!" } },
+      { say: "Back and forth across the wall: questions, tickets, checklists. Each round trip costs days.", send: [{ from: "ops", to: "dev", label: "question?", tone: "bad" }, { from: "dev", to: "ops", label: "fix", delay: 1200 }, { from: "ops", to: "dev", label: "still fails", tone: "bad", delay: 2400 }] },
+      { say: "Result: the **release takes longer**: days, weeks, even months.", hl: ["wall"], note: { wall: "⏳ 3 weeks" } },
+      { say: "DevOps removes the wall: shared responsibility and an **automated** pipeline. Users get v2.0 quickly.", clear: true, note: { ops: "deployed ✓", wall: "removed" }, dim: ["wall"], send: [{ from: "dev", to: "ops", label: "pipeline", tone: "good" }, { from: "ops", to: "u", label: "v2.0", tone: "good", delay: 1200 }], ok: ["dev", "ops", "u"] },
+    ],
+  },
+  "DevOps: removing any roadblock": {
+    title: "the loop turns without friction",
+    w: 620, h: 300,
+    nodes: [
+      { id: "i", x: 310, y: 45, icon: "💡", label: "Idea", w: 110 },
+      { id: "im", x: 520, y: 105, icon: "💻", label: "Implement", w: 120 },
+      { id: "t", x: 520, y: 215, icon: "🧪", label: "Test", w: 110 },
+      { id: "b", x: 310, y: 265, icon: "📦", label: "Build", w: 110 },
+      { id: "d", x: 100, y: 215, icon: "🚀", label: "Deploy", w: 110 },
+      { id: "o", x: 100, y: 105, icon: "📈", label: "Observe", w: 110 },
+      { id: "c", x: 310, y: 155, icon: "♾️", label: "DevOps", w: 110, kind: "accent" },
+    ],
+    edges: [{ from: "i", to: "im" }, { from: "im", to: "t" }, { from: "t", to: "b" }, { from: "b", to: "d" }, { from: "d", to: "o" }, { from: "o", to: "i" }],
+    steps: [
+      { say: "Traditionally each arrow of the loop has a **roadblock**: manual handovers, manual tests, manual deployments.", fail: ["t", "d"], note: { t: "manual", d: "manual" } },
+      { say: "DevOps = **culture + practices + tools**: step by step, it removes one roadblock after another.", clear: true, hl: ["c"] },
+      { say: "**Fully automated, streamlined**: code moves from idea to production without waiting.", send: [{ from: "i", to: "im", label: "v1.1", tone: "good" }, { from: "im", to: "t", label: "v1.1", tone: "good", delay: 700 }, { from: "t", to: "b", label: "v1.1", tone: "good", delay: 1400 }, { from: "b", to: "d", label: "v1.1", tone: "good", delay: 2100 }] },
+      { say: "**Observe** in production gives feedback, which becomes the next idea. The loop never stops.", send: [{ from: "d", to: "o", label: "metrics", tone: "alt" }, { from: "o", to: "i", label: "feedback", tone: "alt", delay: 800 }], ok: ["o", "i"] },
+      { say: "Outcome: **releasing multiple times a day**, with high quality.", ok: ["i", "im", "t", "b", "d", "o", "c"], note: { c: "×5 / day" } },
+    ],
+  },
+});
+
+StudyHub.addScenes("devops", "cicd", {
+  "Continuous Integration (CI)": {
+    title: "one commit through the pipeline",
+    w: 640, h: 300,
+    zones: [{ x: 150, y: 12, w: 340, h: 276, label: "CI server (Jenkins)" }],
+    nodes: [
+      { id: "g", x: 75, y: 150, icon: "🗂️", label: "Git repo", w: 110 },
+      { id: "t", x: 240, y: 80, icon: "🧪", label: "run tests", w: 120 },
+      { id: "p", x: 400, y: 80, icon: "📦", label: "package .jar", w: 130 },
+      { id: "i", x: 400, y: 220, icon: "🐳", label: "build image", w: 130 },
+      { id: "r", x: 570, y: 220, icon: "🗄️", label: "Artifact repo", w: 120 },
+      { id: "s", x: 240, y: 220, icon: "💬", label: "Slack", w: 110 },
+    ],
+    edges: [{ from: "g", to: "t" }, { from: "t", to: "p" }, { from: "p", to: "i" }, { from: "i", to: "r" }, { from: "i", to: "s", dashed: true }],
+    steps: [
+      { say: "A developer pushes a commit. The **CI server** is triggered automatically and pulls the code.", send: [{ from: "g", to: "t", label: "commit a1b2" }], hl: ["g"] },
+      { say: "Step 1: **run the tests**. If one fails, the pipeline stops and the developer knows within minutes.", hl: ["t"], ok: ["t"], note: { t: "142 passed" } },
+      { say: "Step 2: **package the app** with a build tool (Maven/Gradle/npm).", send: [{ from: "t", to: "p", label: "ok" }], ok: ["p"], note: { p: "myapp.jar" } },
+      { say: "Step 3: **build a Docker image** containing the app and its dependencies.", send: [{ from: "p", to: "i", label: "myapp.jar" }], ok: ["i"], note: { i: "myapp:1.4" } },
+      { say: "Step 4: **push to the artifact repository**, and tell the team. Continuous Deployment can now take it to the servers.", send: [{ from: "i", to: "r", label: "myapp:1.4", tone: "good" }, { from: "i", to: "s", label: "Build successful!", tone: "alt", delay: 400 }], ok: ["r"] },
+    ],
+  },
+  "Continuous Delivery vs Continuous Deployment (CD)": {
+    title: "a human button, or none",
+    w: 620, h: 290,
+    zones: [{ x: 8, y: 10, w: 604, h: 128, label: "Continuous Delivery" }, { x: 8, y: 150, w: 604, h: 130, label: "Continuous Deployment" }],
+    nodes: [
+      { id: "r1", x: 90, y: 80, icon: "🗄️", label: "image ready", w: 120 },
+      { id: "h", x: 310, y: 80, icon: "🧑‍💼", label: "manual approval", w: 150, kind: "accent" },
+      { id: "p1", x: 530, y: 80, icon: "🏭", label: "production", w: 120 },
+      { id: "r2", x: 90, y: 220, icon: "🗄️", label: "image ready", w: 120 },
+      { id: "a", x: 310, y: 220, icon: "🤖", label: "automatic", w: 130 },
+      { id: "p2", x: 530, y: 220, icon: "🏭", label: "production", w: 120 },
+    ],
+    edges: [{ from: "r1", to: "h" }, { from: "h", to: "p1" }, { from: "r2", to: "a" }, { from: "a", to: "p2" }],
+    steps: [
+      { say: "Both start the same way: CI produced a tested image, ready to release.", hl: ["r1", "r2"] },
+      { say: "**Delivery**: the release waits for a **human decision** (a button, a change board).", send: [{ from: "r1", to: "h", label: "v1.4" }], note: { h: "waiting… ⏳" } },
+      { say: "**Deployment**: if the pipeline is green, it goes to production **automatically**.", send: [{ from: "r2", to: "a", label: "v1.4" }, { from: "a", to: "p2", label: "v1.4", tone: "good", delay: 900 }], ok: ["p2"] },
+      { say: "The human clicks: delivery reaches production too, just later and on purpose.", send: [{ from: "h", to: "p1", label: "v1.4", tone: "good" }], ok: ["p1"], note: { h: "approved ✓" } },
+    ],
+  },
+});
+
+StudyHub.addScenes("devops", "iac", {
+  "The Terraform workflow: Write → Plan → Apply": {
+    title: "write, preview, provision",
+    w: 620, h: 290,
+    nodes: [
+      { id: "w", x: 90, y: 90, icon: "✍️", label: "main.tf", w: 110 },
+      { id: "tf", x: 310, y: 90, icon: "🟪", label: "Terraform", w: 130, kind: "accent" },
+      { id: "c", x: 530, y: 90, icon: "☁️", label: "AWS", w: 110 },
+      { id: "vpc", x: 420, y: 225, icon: "🌐", label: "VPC", w: 100, at: 3 },
+      { id: "sn", x: 555, y: 225, icon: "🧩", label: "subnet", w: 90, at: 3 },
+      { id: "g", x: 90, y: 225, icon: "🗂️", label: "Git", w: 100 },
+    ],
+    edges: [{ from: "w", to: "tf" }, { from: "tf", to: "c" }, { from: "c", to: "vpc" }, { from: "c", to: "sn" }, { from: "w", to: "g", dashed: true }],
+    steps: [
+      { say: "**Write**: describe the desired infrastructure in HCL (a VPC and a subnet) and commit it to Git.", hl: ["w"], send: [{ from: "w", to: "g", label: "commit", tone: "alt" }] },
+      { say: "**Plan**: Terraform compares the code with what exists and **previews** the changes. Nothing is created yet.", send: [{ from: "w", to: "tf", label: "plan" }], note: { tf: "+ vpc  + subnet" } },
+      { say: "**Apply**: Terraform shows the plan again and asks for confirmation…", note: { tf: "yes? ✓" }, hl: ["tf"] },
+      { say: "…then calls the provider's API: the infrastructure is **provisioned** exactly as described.", send: [{ from: "tf", to: "c", label: "create", tone: "good" }], ok: ["vpc", "sn"] },
+      { say: "Next change? Back to **Write**. Run it again unchanged and Terraform plans **no changes**: same code, same environment.", note: { tf: "0 to add" }, ok: ["c"] },
+    ],
+  },
+  "Ansible: introduction": {
+    title: "agentless and idempotent",
+    w: 620, h: 300,
+    nodes: [
+      { id: "c", x: 110, y: 150, icon: "🖥️", label: "Control node\nansible-playbook", w: 170, kind: "accent" },
+      { id: "w1", x: 500, y: 55, icon: "🗄️", label: "web1", w: 110 },
+      { id: "w2", x: 500, y: 150, icon: "🗄️", label: "web2", w: 110 },
+      { id: "d", x: 500, y: 245, icon: "🗄️", label: "db1", w: 110 },
+    ],
+    edges: [{ from: "c", to: "w1", label: "SSH" }, { from: "c", to: "w2", label: "SSH" }, { from: "c", to: "d", label: "SSH", dashed: true }],
+    steps: [
+      { say: "The **inventory** lists the hosts in groups. The playbook targets the **webservers** group: web1 and web2. No agent is installed on them.", hl: ["w1", "w2"], dim: ["d"] },
+      { say: "Ansible connects over **SSH** and **pushes the module** (apt: install nginx) to each host.", send: [{ from: "c", to: "w1", label: "apt module" }, { from: "c", to: "w2", label: "apt module", delay: 200 }], dim: ["d"] },
+      { say: "The module runs, installs nginx, reports back, then is **removed** from the host.", ok: ["w1", "w2"], note: { w1: "changed", w2: "changed" }, dim: ["d"], send: [{ from: "w1", to: "c", label: "changed", tone: "alt" }, { from: "w2", to: "c", label: "changed", tone: "alt", delay: 200 }] },
+      { say: "Run the playbook **again**: nginx is already present, so nothing changes. That's **idempotence**.", clear: true, send: [{ from: "c", to: "w1", label: "apt module" }, { from: "c", to: "w2", label: "apt module", delay: 200 }], note: { w1: "ok (no change)", w2: "ok (no change)" }, ok: ["w1", "w2"], dim: ["d"] },
+    ],
+  },
+});
+
+StudyHub.addScenes("devops", "k8s", {
+  "Architecture: master node and worker nodes": {
+    title: "kubectl apply, step by step",
+    w: 640, h: 370,
+    zones: [{ x: 150, y: 12, w: 220, h: 346, label: "Master node" }, { x: 390, y: 12, w: 242, h: 165, label: "Worker 1" }, { x: 390, y: 193, w: 242, h: 165, label: "Worker 2" }],
+    nodes: [
+      { id: "u", x: 70, y: 185, icon: "👩‍💻", label: "kubectl", w: 100 },
+      { id: "api", x: 260, y: 62, icon: "🚪", label: "API server", w: 130, kind: "accent" },
+      { id: "e", x: 260, y: 145, icon: "🗃️", label: "etcd", w: 110 },
+      { id: "s", x: 260, y: 228, icon: "🧭", label: "Scheduler", w: 120 },
+      { id: "cm", x: 260, y: 311, icon: "🔁", label: "Controller mgr", w: 140 },
+      { id: "k1", x: 460, y: 95, icon: "🤖", label: "kubelet", w: 100 },
+      { id: "k2", x: 460, y: 276, icon: "🤖", label: "kubelet", w: 100 },
+      { id: "p1", x: 585, y: 95, icon: "📦", label: "pod", w: 70, at: 3 },
+      { id: "p2", x: 585, y: 276, icon: "📦", label: "pod", w: 70, at: 3, until: 4 },
+      { id: "p3", x: 585, y: 276, icon: "📦", label: "new pod", w: 80, at: 5 },
+    ],
+    edges: [{ from: "u", to: "api" }, { from: "api", to: "e" }, { from: "api", to: "s" }, { from: "api", to: "cm" }, { from: "api", to: "k1" }, { from: "api", to: "k2" }, { from: "k1", to: "p1" }, { from: "k2", to: "p2" }, { from: "k2", to: "p3" }],
+    steps: [
+      { say: "`kubectl apply -f deployment.yaml` (2 replicas). The request goes to the **API server**, the cluster's entry point.", send: [{ from: "u", to: "api", label: "replicas: 2" }], hl: ["api"] },
+      { say: "The desired state is saved in **etcd**, the cluster's memory.", send: [{ from: "api", to: "e", label: "save" }], note: { e: "want 2 pods" } },
+      { say: "The **scheduler** picks a worker node for each pod based on free resources.", hl: ["s"], note: { s: "w1 + w2" } },
+      { say: "The **kubelet** on each worker starts the containers: 2 pods are running.", send: [{ from: "api", to: "k1", label: "run pod" }, { from: "api", to: "k2", label: "run pod", delay: 200 }], ok: ["p1", "p2"] },
+      { say: "A pod crashes on worker 2. Reality (1 pod) ≠ desired state (2 pods).", fail: ["k2"], note: { k2: "pod died 💥" } },
+      { say: "The **controller manager** notices and has a **new pod** created: self-healing.", clear: true, note: { k2: "back to 2 pods ✓" }, hl: ["cm"], send: [{ from: "cm", to: "api", label: "need 1 more", tone: "alt" }, { from: "api", to: "k2", label: "run pod", tone: "good", delay: 900 }], ok: ["p1", "p3"] },
+    ],
+  },
+  "Service: a stable address and load balancer": {
+    title: "pods change, the Service stays",
+    w: 620, h: 300,
+    nodes: [
+      { id: "c", x: 80, y: 150, icon: "🧑", label: "Client", w: 100 },
+      { id: "s", x: 270, y: 150, icon: "🔀", label: "Service\n10.96.0.10", w: 130, kind: "accent" },
+      { id: "a", x: 500, y: 55, icon: "📦", label: "pod 10.0.0.4", w: 140 },
+      { id: "b", x: 500, y: 150, icon: "📦", label: "pod 10.0.0.7", w: 140, until: 3 },
+      { id: "b2", x: 500, y: 150, icon: "📦", label: "pod 10.0.0.12", w: 150, at: 3 },
+      { id: "d", x: 500, y: 245, icon: "📦", label: "pod 10.0.0.9", w: 140 },
+    ],
+    edges: [{ from: "c", to: "s" }, { from: "s", to: "a" }, { from: "s", to: "b" }, { from: "s", to: "b2" }, { from: "s", to: "d" }],
+    steps: [
+      { say: "Three pods run the app, each with its own IP. The client only knows the **Service's stable IP**.", hl: ["s"] },
+      { say: "The Service **load-balances** each request to one of the pods selected by the label `app: my-app`.", send: [{ from: "c", to: "s", label: "GET /" }, { from: "s", to: "a", label: "req 1", delay: 700 }, { from: "c", to: "s", label: "GET /", delay: 1000 }, { from: "s", to: "d", label: "req 2", delay: 1700 }] },
+      { say: "A pod dies. Pods are **ephemeral**…", fail: ["b"], note: { b: "💥" } },
+      { say: "…Kubernetes recreates it with a **new IP** (10.0.0.12). The client didn't notice anything: it still calls 10.96.0.10.", clear: true, ok: ["b2"], send: [{ from: "c", to: "s", label: "GET /" }, { from: "s", to: "b2", label: "req 3", tone: "good", delay: 700 }] },
+    ],
+  },
+});
+
+StudyHub.addScenes("devops", "deploy", {
+  "Recreate (Big Bang)": {
+    title: "stop everything, then start",
+    w: 620, h: 280,
+    nodes: [
+      { id: "u", x: 80, y: 140, icon: "👥", label: "Users", w: 100 },
+      { id: "lb", x: 250, y: 140, icon: "🔀", label: "Service", w: 110, kind: "accent" },
+      { id: "a1", x: 470, y: 55, icon: "🔵", label: "v1", w: 80, until: 2 },
+      { id: "a2", x: 470, y: 140, icon: "🔵", label: "v1", w: 80, until: 2 },
+      { id: "a3", x: 470, y: 225, icon: "🔵", label: "v1", w: 80, until: 2 },
+      { id: "b1", x: 470, y: 55, icon: "🟢", label: "v2", w: 80, at: 3 },
+      { id: "b2", x: 470, y: 140, icon: "🟢", label: "v2", w: 80, at: 3 },
+      { id: "b3", x: 470, y: 225, icon: "🟢", label: "v2", w: 80, at: 3 },
+    ],
+    edges: [{ from: "u", to: "lb" }, { from: "lb", to: "a1" }, { from: "lb", to: "a2" }, { from: "lb", to: "a3" }, { from: "lb", to: "b1" }, { from: "lb", to: "b2" }, { from: "lb", to: "b3" }],
+    steps: [
+      { say: "Three pods of **v1** serve all users.", send: [{ from: "u", to: "lb", label: "req" }, { from: "lb", to: "a2", label: "req", delay: 700 }] },
+      { say: "Recreate: **all v1 pods are shut down at once**…", fail: ["a1", "a2", "a3"] },
+      { say: "…and until v2 has booted, users get **Service unavailable**: that's the **downtime**.", send: [{ from: "u", to: "lb", label: "req", tone: "bad" }], fail: ["lb"], note: { lb: "503 ❌" } },
+      { say: "v2 pods start and traffic resumes. Simple and cheap, but users felt the gap.", clear: true, note: { lb: "200 ✓" }, send: [{ from: "u", to: "lb", label: "req" }, { from: "lb", to: "b2", label: "req", tone: "good", delay: 700 }], ok: ["b1", "b2", "b3"] },
+    ],
+  },
+  "Ramped (rolling update, incremental)": {
+    title: "one pod at a time",
+    w: 620, h: 280,
+    nodes: [
+      { id: "u", x: 80, y: 140, icon: "👥", label: "Users", w: 100 },
+      { id: "lb", x: 250, y: 140, icon: "🔀", label: "Service", w: 110, kind: "accent" },
+      { id: "a1", x: 470, y: 55, icon: "🔵", label: "v1", w: 80, until: 1 },
+      { id: "a2", x: 470, y: 140, icon: "🔵", label: "v1", w: 80, until: 2 },
+      { id: "a3", x: 470, y: 225, icon: "🔵", label: "v1", w: 80, until: 3 },
+      { id: "b1", x: 470, y: 55, icon: "🟢", label: "v2", w: 80, at: 1 },
+      { id: "b2", x: 470, y: 140, icon: "🟢", label: "v2", w: 80, at: 2 },
+      { id: "b3", x: 470, y: 225, icon: "🟢", label: "v2", w: 80, at: 3 },
+    ],
+    edges: [{ from: "u", to: "lb" }, { from: "lb", to: "a1" }, { from: "lb", to: "a2" }, { from: "lb", to: "a3" }, { from: "lb", to: "b1" }, { from: "lb", to: "b2" }, { from: "lb", to: "b3" }],
+    steps: [
+      { say: "Three v1 pods. A rolling update with `maxSurge`/`maxUnavailable` starts.", hl: ["a1", "a2", "a3"] },
+      { say: "Pod 1 is replaced by v2. The other two keep serving: **no downtime**.", ok: ["b1"], send: [{ from: "u", to: "lb", label: "req" }, { from: "lb", to: "a2", label: "→ v1", delay: 700 }] },
+      { say: "Pod 2 is replaced. Users now hit v1 **or** v2 at random: **no control over traffic**.", ok: ["b1", "b2"], send: [{ from: "u", to: "lb", label: "req" }, { from: "lb", to: "b1", label: "→ v2", tone: "good", delay: 700 }, { from: "u", to: "lb", label: "req", delay: 900 }, { from: "lb", to: "a3", label: "→ v1", delay: 1600 }] },
+      { say: "Last pod replaced: v2 handles all traffic. A rollback would take the **same slow path** backwards.", ok: ["b1", "b2", "b3"], note: { lb: "100% v2" } },
+    ],
+  },
+  "Blue/Green (red/black)": {
+    title: "flip the switch",
+    w: 620, h: 300,
+    zones: [{ x: 380, y: 10, w: 230, h: 130, label: "Blue · v1 (live)" }, { x: 380, y: 160, w: 230, h: 130, label: "Green · v2 (staging)" }],
+    nodes: [
+      { id: "u", x: 80, y: 150, icon: "👥", label: "Users", w: 100 },
+      { id: "lb", x: 240, y: 150, icon: "🔀", label: "Service", w: 130, kind: "accent" },
+      { id: "bl", x: 495, y: 80, icon: "🔵", label: "v1 × 3", w: 110 },
+      { id: "gr", x: 495, y: 228, icon: "🟢", label: "v2 × 3", w: 110 },
+      { id: "qa", x: 240, y: 260, icon: "🧪", label: "Tests", w: 100 },
+    ],
+    edges: [{ from: "u", to: "lb" }, { from: "lb", to: "bl" }, { from: "lb", to: "gr" }, { from: "qa", to: "gr", dashed: true }],
+    steps: [
+      { say: "**Blue** (v1) is live. **Green** (v2) runs next to it: **double the resources**.", cut: [2], note: { lb: "version=v1" }, send: [{ from: "u", to: "lb", label: "req" }, { from: "lb", to: "bl", label: "req", delay: 700 }], ok: ["bl"] },
+      { say: "Green is fully tested while users stay on Blue.", send: [{ from: "qa", to: "gr", label: "test", tone: "alt" }], ok: ["gr"], note: { gr: "tests ✓" } },
+      { say: "Switch: `kubectl patch service` changes the selector to **version=v2**. **All traffic** moves at once.", cut: [1], mend: [2], note: { lb: "version=v2" }, send: [{ from: "u", to: "lb", label: "req" }, { from: "lb", to: "gr", label: "req", tone: "good", delay: 700 }], dim: ["bl"] },
+      { say: "Problem in v2? Patch the selector back to v1: **instant rollback**.", cut: [2], mend: [1], note: { lb: "version=v1" }, send: [{ from: "u", to: "lb", label: "req" }, { from: "lb", to: "bl", label: "req", delay: 700 }], fail: ["gr"] },
+    ],
+  },
+  "Canary": {
+    title: "10% first, then more",
+    w: 620, h: 290,
+    nodes: [
+      { id: "u", x: 80, y: 145, icon: "👥", label: "Users", w: 100 },
+      { id: "lb", x: 250, y: 145, icon: "⚖️", label: "Istio\nweights", w: 120, kind: "accent" },
+      { id: "v1", x: 490, y: 70, icon: "🔵", label: "v1 (9 pods)", w: 140 },
+      { id: "v2", x: 490, y: 220, icon: "🐤", label: "v2 (1 pod)", w: 140 },
+    ],
+    edges: [{ from: "u", to: "lb" }, { from: "lb", to: "v1" }, { from: "lb", to: "v2" }],
+    steps: [
+      { say: "v2 is deployed next to v1. The router sends **90%** of requests to v1 and **10%** to v2.", note: { lb: "90 / 10" }, send: [{ from: "lb", to: "v1", label: "9 req" }, { from: "lb", to: "v2", label: "1 req", tone: "alt", delay: 500 }] },
+      { say: "Only a **subset of users** sees v2. We watch its **error rate and performance**.", hl: ["v2"], note: { v2: "errors 0.1% ✓" } },
+      { say: "Confidence grows: shift to **50 / 50**…", note: { lb: "50 / 50", v1: "5 pods", v2: "5 pods" }, send: [{ from: "lb", to: "v1", label: "5 req" }, { from: "lb", to: "v2", label: "5 req", tone: "good", delay: 300 }] },
+      { say: "…then **100% v2** and v1 is deleted. If errors had spiked, we'd send the 10% back to v1: **fast rollback**.", note: { lb: "0 / 100", v2: "10 pods" }, dim: ["v1"], ok: ["v2"], send: [{ from: "lb", to: "v2", label: "all req", tone: "good" }] },
+    ],
+  },
+  "A/B testing": {
+    title: "chosen users, measured results",
+    w: 620, h: 300,
+    nodes: [
+      { id: "fr", x: 80, y: 70, icon: "🇫🇷", label: "lang=fr", w: 110 },
+      { id: "en", x: 80, y: 230, icon: "🇬🇧", label: "lang=en", w: 110 },
+      { id: "lb", x: 270, y: 150, icon: "🧠", label: "Smart LB\n(Istio)", w: 130, kind: "accent" },
+      { id: "a", x: 500, y: 70, icon: "🅰️", label: "v1 · old checkout", w: 170 },
+      { id: "b", x: 500, y: 230, icon: "🅱️", label: "v2 · new checkout", w: 170 },
+    ],
+    edges: [{ from: "fr", to: "lb" }, { from: "en", to: "lb" }, { from: "lb", to: "a" }, { from: "lb", to: "b" }],
+    steps: [
+      { say: "Unlike canary, users are not picked at random: the load balancer reads a **condition** (here the **language**; could be location, cookie, device, header).", hl: ["lb"] },
+      { say: "French-speaking users get **v2**, the others stay on **v1**.", send: [{ from: "fr", to: "lb", label: "req" }, { from: "lb", to: "b", label: "→ v2", tone: "alt", delay: 700 }, { from: "en", to: "lb", label: "req", delay: 300 }, { from: "lb", to: "a", label: "→ v1", delay: 1000 }] },
+      { say: "Both versions run in parallel and we **measure business results**: conversion rate.", note: { a: "conversion 3.1%", b: "conversion 4.0%" } },
+      { say: "v2 wins → roll it out to everyone. Downside: needs a **smart, pricey LB** and **distributed tracing** to debug a session.", ok: ["b"], dim: ["a"] },
+    ],
+  },
+  "Shadow (mirrored, dark)": {
+    title: "a copy of every request",
+    w: 620, h: 290,
+    nodes: [
+      { id: "u", x: 80, y: 120, icon: "👥", label: "Users", w: 100 },
+      { id: "lb", x: 250, y: 120, icon: "🪞", label: "Istio\nmirror", w: 120, kind: "accent" },
+      { id: "v1", x: 490, y: 60, icon: "🔵", label: "v1 (100%)", w: 130 },
+      { id: "v2", x: 490, y: 220, icon: "👻", label: "v2 shadow", w: 130 },
+    ],
+    edges: [{ from: "u", to: "lb" }, { from: "lb", to: "v1" }, { from: "lb", to: "v2", dashed: true }],
+    steps: [
+      { say: "Users send requests. **100%** of the real traffic goes to v1, which answers them.", send: [{ from: "u", to: "lb", label: "req" }, { from: "lb", to: "v1", label: "req", delay: 700 }, { from: "v1", to: "u", label: "answer", tone: "good", delay: 1500 }] },
+      { say: "At the same time, a **copy** of each request is **mirrored** to v2. Its answers are thrown away: **no impact on users**.", send: [{ from: "lb", to: "v2", label: "copy", tone: "alt" }], note: { v2: "answer discarded" } },
+      { say: "We test v2 under **real production load**: latency, errors, memory.", hl: ["v2"], note: { v2: "p99 120 ms ✓" } },
+      { say: "Danger: if v2 **charges a card or sends an email**, the action happens twice. Side effects must be **mocked/stubbed**.", fail: ["v2"], note: { v2: "duplicate payment!" } },
+    ],
+  },
+});
